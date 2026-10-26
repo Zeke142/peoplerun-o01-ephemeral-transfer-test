@@ -1,0 +1,45 @@
+name: O01 isolated synthetic RSA transfer acceptance
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: o01-isolated-transfer-one-at-a-time
+  cancel-in-progress: false
+jobs:
+  receiver:
+    if: github.repository == 'Zeke142/peoplerun-o01-ephemeral-transfer-test' && github.actor == 'Zeke142' && github.run_attempt == 1 && github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 13
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Verify source fingerprint
+        shell: bash
+        run: |
+          echo '627f5eb3f2f45eb8e46d3bece6268b23255cff0b427eac87e78e6dcd5321fda1  transfer.py' | sha256sum -c -
+      - name: Synthetic receiver, bound to run and attempt
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 transfer.py receiver
+  sender:
+    if: github.repository == 'Zeke142/peoplerun-o01-ephemeral-transfer-test' && github.actor == 'Zeke142' && github.run_attempt == 1 && github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 9
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Verify source fingerprint
+        shell: bash
+        run: |
+          echo '627f5eb3f2f45eb8e46d3bece6268b23255cff0b427eac87e78e6dcd5321fda1  transfer.py' | sha256sum -c -
+      - name: Send synthetic RSA test ciphertext
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 transfer.py sender
